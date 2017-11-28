@@ -303,16 +303,30 @@ python -m pytest
 ```
 
 ### Real-time OrderBook
-The ```OrderBook``` subscribes to a websocket and keeps a real-time record of
-the orderbook for the product_id input.  Please provide your feedback for future
+The ```OrderBook``` is a convenient data structure to keep a real-time record of
+the orderbook for the product_id input. It processes incoming messages from an
+already existing WebsocketClient. Please provide your feedback for future
 improvements.
 
 ```python
-import gdax, time
-order_book = gdax.OrderBook(product_id='BTC-USD')
-order_book.start()
+import gdax, time, Queue
+class myWebsocketClient(gdax.WebsocketClient):
+    def on_open(self):
+        self.products = ['BTC-USD', 'ETH-USD']
+        self.websocket_queue = Queue.Queue()
+    def on_message(self, msg):
+        self.websocket_queue.put(msg)
+
+order_book_btc = gdax.OrderBook(product_id='BTC-USD')
+order_book_eth = gdax.OrderBook(product_id='ETH-USD')
+wsClient = myWebsocketClient()
+wsClient.start()
 time.sleep(10)
-order_book.close()
+while True:
+    msg = wsClient.websocket_queue.get(timeout=15)
+    order_book.process_message(msg)
+    print(order_book_btc.get_ask())
+    print(order_book_eth.get_bid())
 ```
 
 ## Change Log
