@@ -118,7 +118,7 @@ class PublicClient(object):
         """
         return self._get('/products/{}/ticker'.format(str(product_id)))
 
-    def get_product_trades(self, product_id):
+    def get_product_trades(self, product_id, before='', after=''):
         """List the latest trades for a product.
 
         Args:
@@ -141,7 +141,22 @@ class PublicClient(object):
                 }]
 
         """
-        return self._get('/products/{}/trades'.format(str(product_id)))
+
+        params = {}
+        if before:
+            params['before'] = before
+        if after:
+            params['after'] = after
+
+        while True:
+            r = requests.get(self.url + '/products/{}/trades'.format(str(product_id)), params=params, timeout=30)
+
+            yield r.json()
+            if 'cb-after' in r.headers:
+                params = {'after': r.headers['cb-after']}
+            else:
+                return
+
 
     def get_product_historic_rates(self, product_id, start=None, end=None,
                                    granularity=None):
