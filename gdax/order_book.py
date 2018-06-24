@@ -13,10 +13,10 @@ from gdax.websocket_client import WebsocketClient
 
 
 class OrderBook(object):
-    def __init__(self, product_id='BTC-USD', log_to=None):
+    def __init__(self, product_id='BTC-USD', log_to=None, api_url='https://api.gdax.com'):
         self._asks = RBTree()
         self._bids = RBTree()
-        self._client = PublicClient()
+        self._client = PublicClient(api_url=api_url)
         self._sequence = -1
         self._log_to = log_to
         if self._log_to:
